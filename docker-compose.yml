@@ -1,0 +1,79 @@
+version: "3.9"
+
+# ============================================================
+# DeltaRL Trader — Docker Compose
+# Run: docker-compose up --build
+# ============================================================
+
+services:
+  # ----------------------------------------------------------
+  # Redis: Experience Replay Buffer + Pub/Sub for live events
+  # ----------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: deltarl_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------------------------------------
+  # Backend: FastAPI + RL Engine
+  # ----------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: deltarl_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Override DB URL to use the mounted volume path
+      DATABASE_URL: sqlite:////app/data/deltarl.db
+      REDIS_URL: redis://redis:6379/0
+      MODEL_DIR: /app/models
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist SQLite database and trained models between container restarts
+      - ./data:/app/data
+      - ./models:/app/models
+      # Mount backend code for hot-reload in dev (comment out for prod)
+      - ./backend:/app
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ----------------------------------------------------------
+  # Frontend: Next.js Dashboard
+  # ----------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: deltarl_frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_WS_URL: ws://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  redis_data:
+    driver: local

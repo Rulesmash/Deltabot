@@ -1,0 +1,46 @@
+# ============================================================
+# DeltaRL Trader — Backend Dependencies
+# Python 3.11+
+# ============================================================
+
+# ── Web Framework ────────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+
+# ── Settings / Validation ────────────────────────────────────
+pydantic>=2.7.0
+pydantic-settings>=2.2.0
+
+# ── HTTP / WebSocket ─────────────────────────────────────────
+httpx>=0.27.0
+websockets>=12.0
+
+# ── Database ─────────────────────────────────────────────────
+sqlalchemy>=2.0.29
+aiosqlite>=0.20.0
+
+# ── Redis (experience replay buffer) ─────────────────────────
+redis>=5.0.3
+
+# ── Data Science ─────────────────────────────────────────────
+numpy>=1.26.4
+pandas>=2.2.2
+
+# ── Technical Analysis ───────────────────────────────────────
+pandas-ta @ git+https://github.com/twopirllc/pandas-ta.git@development
+# TA-Lib: requires system C library (see README for install)
+# On Linux/Docker: apt-get install ta-lib, then pip install TA-Lib
+# On Windows: pip install TA_Lib‑0.4.x‑cp311‑cp311‑win_amd64.whl (pre-built)
+
+# ── Reinforcement Learning ────────────────────────────────────
+gymnasium>=0.29.1
+stable-baselines3>=2.3.0
+torch>=2.2.0                 # PyTorch (SB3 dependency)
+tensorboard>=2.16.0          # Training visualization
+
+# ── Alerts ───────────────────────────────────────────────────
+# (httpx already covers Telegram and Discord HTTP calls)
+
+# ── Utilities ────────────────────────────────────────────────
+python-dotenv>=1.0.1
